@@ -1,8 +1,11 @@
-# Basic MQTT example
+# Conncted Weather Station
 
-Basic Mbed OS MQTT example.
+Code for 6tron module to publish weather data in Adafruit platforme.
 
 ## Requirements
+
+Docker
+Usbidp / WSL
 
 ### Hardware requirements
 
@@ -17,13 +20,12 @@ This app makes use of the following libraries:
 - [Mbed MQTT library](https://github.com/ARMmbed/mbed-mqtt/#7fa219e87b3355e8a6fd281659697fe3a0c87630)
 - [Zest_Core_STM32L4A6RG BSP (board support package)](https://github.com/catie-aq/mbed_zest-core-stm32l4a6rg/#e96c03e3644b204a877c24d7988a2c58c61552f8)
 
-## Usage
-
+  
 ### Windows
 
 - Open VS Code IDE.
 
-- Clone the repository directly in a Dev Container, in the desited volume:
+- Clone the repository directly in a Dev Container, in the desited volume (Ctrl + Shift + P):
   `Dev Containers: Clone Repository in Named Container Volume`
 
 > [!IMPORTANT]
@@ -59,9 +61,13 @@ This app makes use of the following libraries:
 
 ## Configure
 
-Edit `main.cpp` to set your `GROUP_NAME`.
+Edit 'AccessCode.h' to set your 'API_ADAFRUIT'.
+Edit 'Main.cpp' to put your information in namespace.
 
-The group name is used to select the topics to which the device will subscribe and publish.
+On Adafruit:  -create groupe 'Station_Meteo'
+              -create Feeds : Temperature / Humidity / Pressure / Alerte.
+              -you can put this Feeds in your DashBoard
+              -creat action who pubilsh :) or :( depending on temperatur feed to controle led
 
 ## Working from command line
 
