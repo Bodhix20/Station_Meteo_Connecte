@@ -1,6 +1,7 @@
 # Conncted Weather Station
 
 Code for 6tron module to publish weather data in Adafruit platforme.
+![image](https://github.com/user-attachments/assets/811d5fde-ee28-47b3-b844-5a8ce48d2a57)
 
 ## Requirements
 
