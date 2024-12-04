@@ -62,6 +62,7 @@ This app makes use of the following libraries:
 ## Configure
 
 Edit 'AccessCode.h' to set your 'API_ADAFRUIT'.
+
 Edit 'Main.cpp' to put your information in namespace.
 
 ### On Adafruit: 
