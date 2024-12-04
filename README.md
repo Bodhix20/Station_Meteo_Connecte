@@ -69,6 +69,9 @@ Edit 'Main.cpp' to put your information in namespace.
               -create Feeds : Temperature / Humidity / Pressure / Alerte.
               -you can put this Feeds in your DashBoard
               -creat action who pubilsh :) or :( depending on temperatur feed to controle led
+### Dashboard
+
+Link to our Adafruits Dashboard : https://io.adafruit.com/Bodhix20/dashboards/station-meteo
 
 ## Working from command line
 
