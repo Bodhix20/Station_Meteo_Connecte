@@ -2,7 +2,7 @@
 .mbed
 projectfiles
 *.py*
-//AccessCode.h
+AccessCode.h
 
 # Do NOT ignore files below
 !dist/program.py

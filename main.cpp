@@ -16,22 +16,32 @@
  */
 
 #include "mbed.h"
+#include "bme280.h"
 #include "AccessCode.h"
+#include <cstdio>
 #include <nsapi_dns.h>
 #include <MQTTClientMbedOs.h>
+
+using namespace sixtron;
 
 namespace {
 #define USERNAME            "Bodhix20"
 #define GROUP_NAME          "Station_Meteo"
-#define MQTT_TOPIC_PUBLISH      "/"USERNAME"/groups/"GROUP_NAME""
-#define MQTT_TOPIC_SUBSCRIBE    "/"USERNAME"/groups/"GROUP_NAME""
+#define MQTT_TOPIC_PUBLISH      USERNAME "/groups/" GROUP_NAME "/json"
+#define MQTT_TOPIC_SUBSCRIBE    USERNAME "/groups/" GROUP_NAME "/json"
 #define SYNC_INTERVAL           1
-#define MQTT_CLIENT_ID          "6LoWPAN_Node_"GROUP_NAME
+#define MQTT_CLIENT_ID          "6LoWPAN_Node_" GROUP_NAME
 }
 
 // Peripherals
-static DigitalOut led(LED1);
+static DigitalOut led(LED1,1);
 static InterruptIn button(BUTTON1);
+
+// Instantiate I2C and sensor
+I2C i2c1(I2C1_SDA, I2C1_SCL);          // Use the correct pins for your board
+BME280 sensor(&i2c1);                  // Pass I2C instance to the BME280 sensor
+
+Mutex stdio_mutex;
 
 // Network
 NetworkInterface *network;
@@ -40,7 +50,7 @@ MQTTClient *client;
 // MQTT
 const char* hostname = "io.adafruit.com";
 int port = 1883;
-
+bool streaming_enabled = true;
 // Error code
 nsapi_size_or_error_t rc = 0;
 
@@ -95,23 +105,24 @@ static void yield(){
     }
 }
 
+
 /*!
- *  \brief Publish data over the corresponding adafruit MQTT topic
+ *  \brief Publish JSON data over the corresponding Adafruit MQTT topic
  *
+ *  \param jsonPayload JSON-formatted string to publish
+ *  \return 0 on success, or a non-zero error code
  */
-static int8_t publish() {
-
-    char *mqttPayload = "Hello from 6TRON";
-
+static int8_t publishJson(const char* jsonPayload) {
+    // Create an MQTT message
     MQTT::Message message;
     message.qos = MQTT::QOS1;
     message.retained = false;
     message.dup = false;
-    message.payload = (void*)mqttPayload;
-    message.payloadlen = strlen(mqttPayload);
+    message.payload = (void*)jsonPayload;
+    message.payloadlen = strlen(jsonPayload);
 
-    printf("Send: %s to MQTT Broker: %s\n", mqttPayload, hostname);
-    rc = client->publish(MQTT_TOPIC_PUBLISH, message);
+    printf("Send JSON: %s to MQTT Broker: %s at thread %s\n", jsonPayload, hostname,MQTT_TOPIC_PUBLISH);
+    int rc = client->publish(MQTT_TOPIC_PUBLISH, message);
     if (rc != 0) {
         printf("Failed to publish: %d\n", rc);
         return rc;
@@ -119,11 +130,52 @@ static int8_t publish() {
     return 0;
 }
 
+// Function to toggle the streaming flag when the button is pressed
+void toggleStreaming() {
+    streaming_enabled = !streaming_enabled;  // Toggle the flag
+    if (streaming_enabled) {
+        printf("Data streaming enabled.\n");
+        led = 1;
+    } else {
+        printf("Data streaming disabled.\n");
+        led = 0;
+    }
+}
+
+//Function that updates the sends the current temperature to the MQTT
+void UpdateData() {
+    if(streaming_enabled){
+        char jsonMessage[256];
+        float temperature = sensor.temperature();  
+        float humidity = sensor.humidity();      
+        float pressure = sensor.pressure()/100; 
+
+        // Format the JSON payload
+        snprintf(jsonMessage, sizeof(jsonMessage),"{ \"feeds\": { \"Temperature\": \"%.2f\", \"Humidity\": \"%.2f\", \"Pressure\": \"%.2f\" } }",temperature, humidity, pressure);
+
+
+        // Publish the JSON payload
+        if (publishJson(jsonMessage) != 0) {
+            printf("Failed to publish message.\n");
+        }
+    }
+}
+
+
 // main() runs in its own thread in the OS
 // (note the calls to ThisThread::sleep_for below for delays)
 
 int main()
 {
+    // Initialize sensor
+    if (!sensor.initialize()) {
+        printf("Failed to initialize BME280 sensor.\n");
+        return -1; // Exit if initialization fails
+    }
+    // Set power mode to NORMAL
+    sensor.set_sampling();
+
+
     printf("Connecting to border router...\n");
 
     /* Get Network configuration */
@@ -177,23 +229,29 @@ int main()
 
     if (client->connect(data) != 0){
         printf("Connection to MQTT Broker Failed\n");
+    }else{
+        printf("Connected to MQTT broker\n");
     }
 
-    printf("Connected to MQTT broker\n");
 
-    /* MQTT Subscribe */
+    /* MQTT Subscribe 
     if ((rc = client->subscribe(MQTT_TOPIC_SUBSCRIBE, MQTT::QOS0, messageArrived)) != 0){
         printf("rc from MQTT subscribe is %d\r\n", rc);
     }
     printf("Subscribed to Topic: %s\n", MQTT_TOPIC_SUBSCRIBE);
+    */
 
     yield();
 
     // Yield every 1 second
     id_yield = main_queue.call_every(SYNC_INTERVAL * 1000, yield);
 
-    // Publish
-    button.fall(main_queue.event(publish));
+    Ticker dataTicker;
+    dataTicker.attach(main_queue.event(UpdateData),5s);
+
+    button.fall(main_queue.event(toggleStreaming)); // When button is pressed, toggle streaming
+
+    
 
     main_queue.dispatch_forever();
 }
