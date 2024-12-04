@@ -6,3 +6,4 @@ AccessCode.h
 
 # Do NOT ignore files below
 !dist/program.py
+AccessCode.h

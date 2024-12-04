@@ -28,7 +28,7 @@ namespace {
 #define USERNAME            "Bodhix20"
 #define GROUP_NAME          "Station_Meteo"
 #define MQTT_TOPIC_PUBLISH      USERNAME "/groups/" GROUP_NAME "/json"
-#define MQTT_TOPIC_SUBSCRIBE    USERNAME "/groups/" GROUP_NAME "/json"
+#define MQTT_TOPIC_SUBSCRIBE    USERNAME "/feeds/station-meteo.alert"
 #define SYNC_INTERVAL           1
 #define MQTT_CLIENT_ID          "6LoWPAN_Node_" GROUP_NAME
 }
@@ -75,15 +75,13 @@ void messageArrived(MQTT::MessageData& md)
     char_payload[message.payloadlen] = '\0'; // String must be null terminated
 
     // Compare our payload with known command strings
-    if (strcmp(char_payload, "ON") == 0) {
+    if (strcmp(char_payload, ":(") == 0) {
         led = 1;
+        printf("Que calor\n");
     }
-    else if (strcmp(char_payload, "OFF") == 0) {
+    else {
         led = 0;
-    }
-    else if (strcmp(char_payload, "RESET") == 0) {
-        printf("RESETTING ...\n");
-        system_reset();
+        printf("Il fait bon :)\n");
     }
 }
 
@@ -135,10 +133,8 @@ void toggleStreaming() {
     streaming_enabled = !streaming_enabled;  // Toggle the flag
     if (streaming_enabled) {
         printf("Data streaming enabled.\n");
-        led = 1;
     } else {
         printf("Data streaming disabled.\n");
-        led = 0;
     }
 }
 
@@ -235,11 +231,11 @@ int main()
 
 
     /* MQTT Subscribe 
+    */
     if ((rc = client->subscribe(MQTT_TOPIC_SUBSCRIBE, MQTT::QOS0, messageArrived)) != 0){
         printf("rc from MQTT subscribe is %d\r\n", rc);
     }
     printf("Subscribed to Topic: %s\n", MQTT_TOPIC_SUBSCRIBE);
-    */
 
     yield();
 
