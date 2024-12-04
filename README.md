@@ -64,7 +64,8 @@ This app makes use of the following libraries:
 Edit 'AccessCode.h' to set your 'API_ADAFRUIT'.
 Edit 'Main.cpp' to put your information in namespace.
 
-On Adafruit:  -create groupe 'Station_Meteo'
+### On Adafruit: 
+              -create groupe 'Station_Meteo'
               -create Feeds : Temperature / Humidity / Pressure / Alerte.
               -you can put this Feeds in your DashBoard
               -creat action who pubilsh :) or :( depending on temperatur feed to controle led
