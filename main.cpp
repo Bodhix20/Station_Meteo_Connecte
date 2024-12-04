@@ -14,14 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "mbed.h"
+#include "AccessCode.h"
 #include <nsapi_dns.h>
 #include <MQTTClientMbedOs.h>
 
 namespace {
-#define GROUP_NAME            "ABCD"
-#define MQTT_TOPIC_PUBLISH      "/estia/"GROUP_NAME"/uplink"
-#define MQTT_TOPIC_SUBSCRIBE    "/estia/"GROUP_NAME"/downlink"
+#define USERNAME            "Bodhix20"
+#define GROUP_NAME          "Station_Meteo"
+#define MQTT_TOPIC_PUBLISH      "/"USERNAME"/groups/"GROUP_NAME""
+#define MQTT_TOPIC_SUBSCRIBE    "/"USERNAME"/groups/"GROUP_NAME""
 #define SYNC_INTERVAL           1
 #define MQTT_CLIENT_ID          "6LoWPAN_Node_"GROUP_NAME
 }
@@ -35,7 +38,7 @@ NetworkInterface *network;
 MQTTClient *client;
 
 // MQTT
-const char* hostname = "test.mosquitto.org";
+const char* hostname = "io.adafruit.com";
 int port = 1883;
 
 // Error code
@@ -168,7 +171,10 @@ int main()
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.MQTTVersion = 4;
     data.keepAliveInterval = 25;
-    data.clientID.cstring = MQTT_CLIENT_ID;
+    //data.clientID.cstring = MQTT_CLIENT_ID;
+    data.username.cstring = USERNAME ;
+    data.password.cstring = ADAFRUIT_KEY ;
+
     if (client->connect(data) != 0){
         printf("Connection to MQTT Broker Failed\n");
     }
@@ -191,3 +197,4 @@ int main()
 
     main_queue.dispatch_forever();
 }
+ 
